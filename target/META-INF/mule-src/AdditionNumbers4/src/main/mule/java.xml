@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:java="http://www.mulesoft.org/schema/mule/java"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="226da756-47ac-4775-b98b-d16a370185e5">
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="javaFlow" doc:id="0e179f3f-dadc-4ce2-8dd4-e34acb9471fa" >
+		<http:listener doc:name="Listener" doc:id="80b79887-eb0d-44b2-970a-ab835d0261dc" config-ref="HTTP_Listener_config" path="/calc/add">
+			<http:response >
+				<http:body ><![CDATA[#[output application/json --- payload]]]></http:body>
+			</http:response>
+		</http:listener>
+		<java:invoke-static doc:name="Invoke static" doc:id="4f47d3e6-273a-42f0-99c4-f5ad4e67f0c2" class="comp.util.calc.MyCalculator1" method="add(int,int)">
+			<java:args ><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	arg0: (attributes.queryParams.n1 default 1) as Number,
+	arg1: (attributes.queryParams.n2 default 2) as Number
+}]]]></java:args>
+		</java:invoke-static>
+		<ee:transform doc:name="Transform Message" doc:id="1b91ca29-70d4-44bc-9bc0-f9e51689a039" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="610fb829-c2dd-44a4-9164-b833e401423d" message="#[payload]"/>
+	</flow>
+</mule>
